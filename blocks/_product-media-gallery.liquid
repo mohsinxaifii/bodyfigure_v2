@@ -27,8 +27,8 @@
     assign other_variant_titles = '' | split: ','
     for v in selected_product.variants
       unless v.id == current_variant.id
-        assign v_title = v.title | strip | downcase
-        assign other_variant_titles = other_variant_titles | concat: v_title | split: ','
+        assign v_title = v.title | strip | downcase | split: '|||'
+        assign other_variant_titles = other_variant_titles | concat: v_title
       endunless
     endfor
   endif
@@ -104,6 +104,13 @@
     for media in selected_product.media
       if block_settings.hide_variants and variant_images contains media.src and sorted_media.size > 0
         continue
+      endif
+
+      if match_media_by_alt and media.id != selected_variant_media.id
+        assign media_alt = media.alt | strip | downcase
+        if media_alt != blank and media_alt != current_variant_title and other_variant_titles contains media_alt
+          continue
+        endif
       endif
 
       if media.id != selected_variant_media.id
