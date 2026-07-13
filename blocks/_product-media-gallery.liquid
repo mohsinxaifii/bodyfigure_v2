@@ -118,6 +118,16 @@
         assign sorted_media = sorted_media | concat: found_media
       endif
     endfor
+  elsif match_media_by_alt
+    for media in selected_product.media
+      assign media_alt = media.alt | strip | downcase
+      if media_alt != blank and media_alt != current_variant_title and other_variant_titles contains media_alt
+        continue
+      endif
+
+      assign found_media = selected_product.media | where: 'id', media.id
+      assign sorted_media = sorted_media | concat: found_media
+    endfor
   else
     assign sorted_media = selected_product.media
   endif
