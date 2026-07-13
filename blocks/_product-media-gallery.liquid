@@ -11,11 +11,18 @@
 
 {%- liquid
   assign selected_product = closest.product
-  assign selected_variant_media = selected_product.selected_or_first_available_variant.featured_media
+  assign current_variant = selected_product.selected_or_first_available_variant
+  assign selected_variant_media = current_variant.featured_media
   assign first_3d_model = selected_product.media | where: 'media_type', 'model' | first
 
   if block_settings.hide_variants
     assign variant_images = selected_product.images | where: 'attached_to_variant?', true | map: 'src'
+  endif
+
+  assign match_media_by_alt = false
+  if block_settings.match_media_alt_to_variant and selected_product.has_only_default_variant == false
+    assign match_media_by_alt = true
+    assign current_variant_title = current_variant.title | strip | downcase
   endif
 
   if block_settings.slideshow_controls_style == 'thumbnails'
