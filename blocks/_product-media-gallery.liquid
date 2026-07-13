@@ -23,6 +23,14 @@
   if block_settings.match_media_alt_to_variant and selected_product.has_only_default_variant == false
     assign match_media_by_alt = true
     assign current_variant_title = current_variant.title | strip | downcase
+
+    assign other_variant_titles = '' | split: ','
+    for v in selected_product.variants
+      unless v.id == current_variant.id
+        assign v_title = v.title | strip | downcase
+        assign other_variant_titles = other_variant_titles | concat: v_title | split: ','
+      endunless
+    endfor
   endif
 
   if block_settings.slideshow_controls_style == 'thumbnails'
