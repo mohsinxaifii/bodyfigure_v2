@@ -1,0 +1,661 @@
+{% doc %}
+  @prompt
+    media gallery
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-media-gallery-{{ ai_gen_id }} {
+    width: 100%;
+    padding: {{ block.settings.spacing_top }}px 0 {{ block.settings.spacing_bottom }}px;
+  }
+
+  .ai-media-gallery-container-{{ ai_gen_id }} {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-media-gallery-heading-{{ ai_gen_id }} {
+    text-align: {{ block.settings.heading_alignment }};
+    margin-bottom: {{ block.settings.heading_spacing }}px;
+    color: {{ block.settings.heading_color }};
+    font-size: {{ block.settings.heading_size }}px;
+  }
+
+  .ai-media-gallery-grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat({{ block.settings.columns_desktop }}, 1fr);
+    gap: {{ block.settings.gap }}px;
+  }
+
+  .ai-media-gallery-item-{{ ai_gen_id }} {
+    position: relative;
+    overflow: hidden;
+    border-radius: {{ block.settings.border_radius }}px;
+    background-color: {{ block.settings.item_background }};
+    cursor: pointer;
+  }
+
+  .ai-media-gallery-item-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    padding-bottom: {{ block.settings.aspect_ratio }}%;
+  }
+
+  .ai-media-gallery-media-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .ai-media-gallery-item-{{ ai_gen_id }}:hover .ai-media-gallery-media-{{ ai_gen_id }} {
+    transform: scale(1.05);
+  }
+
+  .ai-media-gallery-placeholder-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-media-gallery-placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .ai-media-gallery-overlay-{{ ai_gen_id }} {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .ai-media-gallery-item-{{ ai_gen_id }}:hover .ai-media-gallery-overlay-{{ ai_gen_id }} {
+    opacity: 1;
+  }
+
+  .ai-media-gallery-caption-{{ ai_gen_id }} {
+    color: #ffffff;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .ai-media-gallery-lightbox-{{ ai_gen_id }} {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-media-gallery-lightbox-{{ ai_gen_id }}.active {
+    display: flex;
+  }
+
+  .ai-media-gallery-lightbox-content-{{ ai_gen_id }} {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+  }
+
+  .ai-media-gallery-lightbox-media-{{ ai_gen_id }} {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+
+  .ai-media-gallery-lightbox-close-{{ ai_gen_id }} {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    font-size: 32px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+
+  .ai-media-gallery-lightbox-close-{{ ai_gen_id }}:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .ai-media-gallery-lightbox-nav-{{ ai_gen_id }} {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    font-size: 24px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+
+  .ai-media-gallery-lightbox-nav-{{ ai_gen_id }}:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .ai-media-gallery-lightbox-prev-{{ ai_gen_id }} {
+    left: 20px;
+  }
+
+  .ai-media-gallery-lightbox-next-{{ ai_gen_id }} {
+    right: 20px;
+  }
+
+  .ai-media-gallery-lightbox-caption-{{ ai_gen_id }} {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffffff;
+    font-size: 16px;
+    text-align: center;
+    max-width: 80%;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-media-gallery-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_mobile }}, 1fr);
+    }
+
+    .ai-media-gallery-heading-{{ ai_gen_id }} {
+      font-size: {{ block.settings.heading_size | times: 0.7 }}px;
+    }
+
+    .ai-media-gallery-lightbox-nav-{{ ai_gen_id }} {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+
+    .ai-media-gallery-lightbox-close-{{ ai_gen_id }} {
+      width: 40px;
+      height: 40px;
+      font-size: 24px;
+    }
+  }
+{% endstyle %}
+
+<media-gallery-{{ ai_gen_id }} class="ai-media-gallery-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-media-gallery-container-{{ ai_gen_id }}">
+    {% if block.settings.heading != blank %}
+      <h2 class="ai-media-gallery-heading-{{ ai_gen_id }}">{{ block.settings.heading }}</h2>
+    {% endif %}
+
+    <div class="ai-media-gallery-grid-{{ ai_gen_id }}">
+      {% for i in (1..9) %}
+        {% liquid
+          assign image_key = 'image_' | append: i
+          assign caption_key = 'caption_' | append: i
+          assign image = block.settings[image_key]
+          assign caption = block.settings[caption_key]
+        %}
+
+        {% if image != blank %}
+          <div class="ai-media-gallery-item-{{ ai_gen_id }}" data-index="{{ forloop.index0 }}">
+            <div class="ai-media-gallery-item-wrapper-{{ ai_gen_id }}">
+              <img
+                src="{{ image | image_url: width: 800 }}"
+                alt="{{ image.alt | escape }}"
+                loading="lazy"
+                width="800"
+                height="800"
+                class="ai-media-gallery-media-{{ ai_gen_id }}"
+              >
+              {% if caption != blank %}
+                <div class="ai-media-gallery-overlay-{{ ai_gen_id }}">
+                  <p class="ai-media-gallery-caption-{{ ai_gen_id }}">{{ caption }}</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="ai-media-gallery-lightbox-{{ ai_gen_id }}">
+    <button class="ai-media-gallery-lightbox-close-{{ ai_gen_id }}" aria-label="Close lightbox">×</button>
+    <button class="ai-media-gallery-lightbox-nav-{{ ai_gen_id }} ai-media-gallery-lightbox-prev-{{ ai_gen_id }}" aria-label="Previous image">‹</button>
+    <button class="ai-media-gallery-lightbox-nav-{{ ai_gen_id }} ai-media-gallery-lightbox-next-{{ ai_gen_id }}" aria-label="Next image">›</button>
+    <div class="ai-media-gallery-lightbox-content-{{ ai_gen_id }}">
+      <img src="" alt="" class="ai-media-gallery-lightbox-media-{{ ai_gen_id }}">
+      <p class="ai-media-gallery-lightbox-caption-{{ ai_gen_id }}"></p>
+    </div>
+  </div>
+</media-gallery-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class MediaGallery{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.items = [];
+        this.currentIndex = 0;
+      }
+
+      connectedCallback() {
+        this.galleryItems = this.querySelectorAll('.ai-media-gallery-item-{{ ai_gen_id }}');
+        this.lightbox = this.querySelector('.ai-media-gallery-lightbox-{{ ai_gen_id }}');
+        this.lightboxImage = this.querySelector('.ai-media-gallery-lightbox-media-{{ ai_gen_id }}');
+        this.lightboxCaption = this.querySelector('.ai-media-gallery-lightbox-caption-{{ ai_gen_id }}');
+        this.closeButton = this.querySelector('.ai-media-gallery-lightbox-close-{{ ai_gen_id }}');
+        this.prevButton = this.querySelector('.ai-media-gallery-lightbox-prev-{{ ai_gen_id }}');
+        this.nextButton = this.querySelector('.ai-media-gallery-lightbox-next-{{ ai_gen_id }}');
+
+        this.collectItems();
+        this.setupEventListeners();
+      }
+
+      collectItems() {
+        this.galleryItems.forEach((item) => {
+          const img = item.querySelector('.ai-media-gallery-media-{{ ai_gen_id }}');
+          const caption = item.querySelector('.ai-media-gallery-caption-{{ ai_gen_id }}');
+          
+          if (img) {
+            this.items.push({
+              src: img.src.replace(/width=\d+/, 'width=2000'),
+              alt: img.alt,
+              caption: caption ? caption.textContent : ''
+            });
+          }
+        });
+      }
+
+      setupEventListeners() {
+        this.galleryItems.forEach((item, index) => {
+          item.addEventListener('click', () => {
+            this.openLightbox(index);
+          });
+        });
+
+        this.closeButton.addEventListener('click', () => {
+          this.closeLightbox();
+        });
+
+        this.prevButton.addEventListener('click', () => {
+          this.showPrevious();
+        });
+
+        this.nextButton.addEventListener('click', () => {
+          this.showNext();
+        });
+
+        this.lightbox.addEventListener('click', (e) => {
+          if (e.target === this.lightbox) {
+            this.closeLightbox();
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (!this.lightbox.classList.contains('active')) return;
+
+          if (e.key === 'Escape') {
+            this.closeLightbox();
+          } else if (e.key === 'ArrowLeft') {
+            this.showPrevious();
+          } else if (e.key === 'ArrowRight') {
+            this.showNext();
+          }
+        });
+      }
+
+      openLightbox(index) {
+        this.currentIndex = index;
+        this.updateLightboxContent();
+        this.lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      closeLightbox() {
+        this.lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      showPrevious() {
+        this.currentIndex = (this.currentIndex - 1 + this.items.length) % this.items.length;
+        this.updateLightboxContent();
+      }
+
+      showNext() {
+        this.currentIndex = (this.currentIndex + 1) % this.items.length;
+        this.updateLightboxContent();
+      }
+
+      updateLightboxContent() {
+        const item = this.items[this.currentIndex];
+        this.lightboxImage.src = item.src;
+        this.lightboxImage.alt = item.alt;
+        this.lightboxCaption.textContent = item.caption;
+        
+        if (!item.caption) {
+          this.lightboxCaption.style.display = 'none';
+        } else {
+          this.lightboxCaption.style.display = 'block';
+        }
+      }
+    }
+
+    customElements.define('media-gallery-{{ ai_gen_id }}', MediaGallery{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Media gallery",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Gallery"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 16,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 32
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#030302"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "heading_spacing",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Heading spacing",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "label": "Columns on desktop",
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Gap between items",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "aspect_ratio",
+      "min": 50,
+      "max": 150,
+      "step": 10,
+      "unit": "%",
+      "label": "Image aspect ratio",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 2
+    },
+    {
+      "type": "color",
+      "id": "item_background",
+      "label": "Item background",
+      "default": "#f4f4f4"
+    },
+    {
+      "type": "range",
+      "id": "spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top spacing",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom spacing",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Image 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_1",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_1",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_2",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_2",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_3",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_3",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 4"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_4",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_4",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 5"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_5",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_5",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 6"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_6",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_6",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 7"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_7",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_7",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 8"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_8",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_8",
+      "label": "Caption"
+    },
+    {
+      "type": "header",
+      "content": "Image 9"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_9",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_9",
+      "label": "Caption"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Media gallery"
+    }
+  ]
+}
+{% endschema %}
